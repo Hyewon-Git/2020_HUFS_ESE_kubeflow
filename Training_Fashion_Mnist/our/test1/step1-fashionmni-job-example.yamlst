@@ -2,7 +2,7 @@ apiVersion: "kubeflow.org/v1alpha3"
 kind: Experiment
 metadata:
   namespace: admin
-  name: step1-random-job-example
+  name: step1-fashionmni-job-example
 spec:
   parallelTrialCount: 1
   maxTrialCount: 12
@@ -39,10 +39,10 @@ spec:
               spec:
                 containers:
                 - name: {{.Trial}}
-                  image: khw2126/step1-katib-mnist-job:0.0.1
+                  image: khw2126/step1-katib-fashionmnist-job:0.0.1
                   command:
                   - "python3"
-                  - "/app/step1-katib-mnist-random-job.py"
+                  - "/app/step1-katib-fashionmnist-job.py"
                   {{- with .HyperParameters}}
                   {{- range .}}
                   - "{{.Name}}={{.Value}}"
