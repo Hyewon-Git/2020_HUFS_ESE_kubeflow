@@ -11,16 +11,18 @@ class MyFashionMnist(object):
     def train(self):
         print("TensorFlow version: ", tf.__version__)
         
-        #hyper
+        #하이퍼파라미터를 입력받기위한 argparse 라이브러리
         parser = argparse.ArgumentParser()
         parser.add_argument('--learning_rate', default=0.01, type=float)
         parser.add_argument('--dropout', default=0.2, type=float)
         args = parser.parse_args()
-        # fashion_mnist
+        
+        # fashion_mnist DATASET 불러오기
         fashion_mnist = keras.datasets.fashion_mnist
 
         (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
-
+           
+        #모델구조설정
         model = keras.Sequential([
             keras.layers.Flatten(input_shape=(28, 28)),
             keras.layers.Dense(128, activation='relu'),
