@@ -16,7 +16,6 @@ class MyFashionMnist(object):
         parser = argparse.ArgumentParser()
         parser.add_argument('--learning_rate', default=0.01, type=float)
         parser.add_argument('--epochs', default=10, type=int)
-        parser.add_argument('--batch_size', default=64, type=int)
         args = parser.parse_args()
         
         # fashion_mnist DATASET 불러오기
@@ -40,7 +39,7 @@ class MyFashionMnist(object):
         print("Training...")
         # model.fit(train_images, train_labels, epochs=5)        
         katib_metric_log_callback = KatibMetricLog()
-        training_history = model.fit(train_images,train_labels, batch_size=args.batch_size,epochs=args.epochs,
+        training_history = model.fit(train_images,train_labels, batch_size=64,epochs=args.epochs,
                                      validation_split=0.1,
                                      callbacks=[katib_metric_log_callback])
         
