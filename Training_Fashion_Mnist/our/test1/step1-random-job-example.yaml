@@ -2,7 +2,7 @@ apiVersion: "kubeflow.org/v1alpha3"
 kind: Experiment
 metadata:
   namespace: admin
-  name: random-job-example
+  name: step1-random-job-example
 spec:
   parallelTrialCount: 1
   maxTrialCount: 12
