@@ -16,7 +16,7 @@ spec:
   algorithm:
     algorithmName: random
   parameters:
-      - name: --learning_rate
+    - name: --learning_rate
       parameterType: double
       feasibleSpace:
         min: "0.0005"
