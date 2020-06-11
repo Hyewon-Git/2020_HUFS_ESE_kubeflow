@@ -15,7 +15,8 @@ class MyFashionMnist(object):
         #하이퍼파라미터를 입력받기위한 argparse 라이브러리
         parser = argparse.ArgumentParser()
         parser.add_argument('--learning_rate', default=0.01, type=float)
-        parser.add_argument('--epochs', default=10, type=int)
+#         parser.add_argument('--epochs', default=10, type=int)
+        parser.add_argument('--dropout', default=0.2, type=float)
         args = parser.parse_args()
         
         # fashion_mnist DATASET 불러오기
@@ -35,6 +36,7 @@ class MyFashionMnist(object):
         model = keras.Sequential([
             keras.layers.Flatten(input_shape=(28, 28)),
             keras.layers.Dense(128, activation='relu'),
+            keras.layers.Dropout(args.dropout),
             keras.layers.Dense(10, activation='softmax')
         ])
         model.summary()
@@ -46,7 +48,7 @@ class MyFashionMnist(object):
         print("Training...")
         # model.fit(train_images, train_labels, epochs=5)        
         katib_metric_log_callback = KatibMetricLog()
-        training_history = model.fit(train_images,train_labels, batch_size=64,epochs=args.epochs,
+        training_history = model.fit(train_images,train_labels, batch_size=64,epochs=10,
                                      validation_data=(x_val, y_val),
                                      callbacks=[katib_metric_log_callback])
         
