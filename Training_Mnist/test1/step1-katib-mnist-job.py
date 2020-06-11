@@ -17,6 +17,7 @@ class MyMnist(object):
     parser = argparse.ArgumentParser()
     parser.add_argument('--learning_rate', default=0.01, type=float)
     parser.add_argument('--epochs', default=10, type=int)
+#    parser.add_argument('--dropout', default=0.2, type=float)
     args = parser.parse_args()
     
     # Load MNIST dataset
