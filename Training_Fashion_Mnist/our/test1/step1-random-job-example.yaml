@@ -28,9 +28,11 @@ spec:
         max: "15"
     - name: --batch_size
       parameterType: int
-      feasibleSpace:
-        min: "32"
-        max: "256"
+      list:
+        - "32"
+        - "64"
+        - "128"
+        - "256"
   trialTemplate:
     goTemplate:
         rawTemplate: |-
