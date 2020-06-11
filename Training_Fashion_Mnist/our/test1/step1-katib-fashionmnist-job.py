@@ -23,7 +23,13 @@ class MyFashionMnist(object):
 
         (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
         train_images = train_images / 255.0
-        test_images = test_images / 255.0        
+        test_images = test_images / 255.0
+        
+        # Reserve 10,000 samples for validation
+        x_val = train_images-10000:]
+        y_val =train_labels[-10000:]
+        train_images = train_images[:-10000]
+        train_labels = train_labels[:-10000]
            
         #모델구조설정
         model = keras.Sequential([
@@ -41,13 +47,13 @@ class MyFashionMnist(object):
         # model.fit(train_images, train_labels, epochs=5)        
         katib_metric_log_callback = KatibMetricLog()
         training_history = model.fit(train_images,train_labels, batch_size=64,epochs=args.epochs,
-                                     validation_split=0.1,
+                                     validation_data=(x_val, y_val),
                                      callbacks=[katib_metric_log_callback])
         
-        print("\ntraining_history:", training_history.history)
+        print("\\ntraining_history:", training_history.history)
         
         # Evaluate the model on the test data using `evaluate`
-        print('\n# Evaluate on test data')
+        print('\\n# Evaluate on test data')
         results = model.evaluate(test_images, test_labels, batch_size=128)
         print('test loss, test acc:', results)
         
