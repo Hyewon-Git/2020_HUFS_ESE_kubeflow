@@ -48,8 +48,7 @@ class MyFashionMnist(object):
         
         # Evaluate the model on the test data using `evaluate`
         print('\n# Evaluate on test data')
-        
-        results = model.evaluate(test_images, test_labels,verbose=2)
+        results = model.evaluate(test_images, test_labels, batch_size=128)
         print('test loss, test acc:', results)
         
         
