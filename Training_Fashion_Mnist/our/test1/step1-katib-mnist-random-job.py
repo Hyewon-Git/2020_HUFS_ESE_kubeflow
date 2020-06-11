@@ -21,6 +21,12 @@ class MyFashionMnist(object):
         fashion_mnist = keras.datasets.fashion_mnist
 
         (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+        
+        # Reserve 10,000 samples for validation
+        x_val = train_images[-10000:]
+        y_val = train_labels[-10000:]
+        x_train = train_images[:-10000]
+        y_train = train_labels[:-10000]
            
         #모델구조설정
         model = keras.Sequential([
@@ -33,9 +39,33 @@ class MyFashionMnist(object):
         model.compile(optimizer='adam',
                       loss='sparse_categorical_crossentropy',
                       metrics=['accuracy'])
+        
+        print("Training...")
+        # model.fit(train_images, train_labels, epochs=5)        
+        katib_metric_log_callback = KatibMetricLog()
+        training_history = model.fit(x_train, y_train, batch_size=64, epochs=10,
+                                     validation_data=(x_val, y_val),
+                                     callbacks=[katib_metric_log_callback])
+        
+        print("\ntraining_history:", training_history.history)
+        
+        # Evaluate the model on the test data using `evaluate`
+        print('\n# Evaluate on test data')
+        
+        results = model.evaluate(test_images, test_labels, batch_size=128)
+        print('test loss, test acc:', results)
+        
+        
+class KatibMetricLog(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        # RFC 3339
+        local_time = datetime.now(timezone.utc).astimezone().isoformat()
+        print("\nEpoch {}".format(epoch+1))
+        print("{} accuracy={:.4f}".format(local_time, logs['acc']))
+        print("{} loss={:.4f}".format(local_time, logs['loss']))
+        print("{} Validation-accuracy={:.4f}".format(local_time, logs['val_acc']))
+        print("{} Validation-loss={:.4f}".format(local_time, logs['val_loss']))
 
-        model.fit(train_images, train_labels, epochs=5)
-        model.evaluate(test_images, test_labels, verbose=2)
         
 if __name__=='__main__':
     local_train = MyFashionMnist()
