@@ -19,8 +19,8 @@ spec:
     - name: --learning_rate
       parameterType: double
       feasibleSpace:
-        min: "0.001"
-        max: "0.1"
+        min: "0.01"
+        max: "0.2"
     - name: --dropout
       parameterType: double
       feasibleSpace:
