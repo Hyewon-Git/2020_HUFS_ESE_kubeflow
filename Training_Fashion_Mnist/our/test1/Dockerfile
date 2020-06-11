@@ -1,6 +1,6 @@
 FROM tensorflow/tensorflow:2.1.0-py3
 
 RUN mkdir -p /app
-ADD step1-katib-mnist-random-job.py /app/
+ADD step1-katib-fashionmnist-job.py /app/
 
-ENTRYPOINT ["python", "/app/katib-mnist-random-job.py"]
+ENTRYPOINT ["python", "/app/step1-katib-fashionmnist-job.py"]
