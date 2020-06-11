@@ -1,11 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals, unicode_literals
-import matplotlib.pyplot as plt
-import tempfile
-import os
+
 import tensorflow as tf
 import numpy as np
+import argparse
+from datetime import datetime, timezone
+
 from tensorflow import keras
-import tensorflow_model_optimization as tfmot
+
 
 class MyFashionMnist(object):
     def train(self):
