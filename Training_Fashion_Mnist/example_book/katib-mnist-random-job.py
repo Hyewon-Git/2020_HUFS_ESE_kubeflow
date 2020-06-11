@@ -1,65 +1,86 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import tensorflow as tf
-import numpy as np
+import os
 import argparse
-from datetime import datetime, timezone
+from tensorflow.python.keras.callbacks import Callback
 
-def train():
-    print("TensorFlow version: ", tf.__version__)
 
+
+class MyFashionMnist(object):
+  def train(self):
+    
+    # 입력 값을 받게 추가합니다.
     parser = argparse.ArgumentParser()
-    parser.add_argument('--learning_rate', default=0.01, type=float)
-    parser.add_argument('--dropout', default=0.2, type=float)
-    args = parser.parse_args()
-
-    mnist = tf.keras.datasets.mnist
-
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    parser.add_argument('--learning_rate', required=False, type=float, default=0.001)
+    parser.add_argument('--dropout_rate', required=False, type=float, default=0.2)
+    # epoch 5 ~ 15
+    parser.add_argument('--epoch', required=False, type=int, default=5)    
+    # relu, sigmoid, softmax, tanh
+    parser.add_argument('--act', required=False, type=str, default='relu')        
+    # layer 1 ~ 5
+    parser.add_argument('--layer', required=False, type=int, default=1)        
+    
+    
+    args = parser.parse_args()    
+    
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
-    # Reserve 10,000 samples for validation
-    x_val = x_train[-10000:]
-    y_val = y_train[-10000:]
-    x_train = x_train[:-10000]
-    y_train = y_train[:-10000]
-
-    model = tf.keras.models.Sequential([
-      tf.keras.layers.Flatten(input_shape=(28, 28)),
-      tf.keras.layers.Dense(128, activation='relu'),
-      tf.keras.layers.Dropout(args.dropout),
-      tf.keras.layers.Dense(10, activation='softmax')
-    ])
-
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=args.learning_rate),
+    model = tf.keras.models.Sequential()
+    model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
+    
+    for i in range(int(args.layer)):    
+        model.add(tf.keras.layers.Dense(128, activation=args.act))
+        model.add(tf.keras.layers.Dropout(args.dropout_rate))
+        
+    model.add(tf.keras.layers.Dense(10, activation='softmax'))
+    model.summary()
+    
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr=args.learning_rate),
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
 
-    print("Training...")
+    model.fit(x_train, y_train,
+              verbose=0,
+              validation_data=(x_test, y_test),
+              epochs=args.epoch,
+              callbacks=[KatibMetricLog()])
 
-    katib_metric_log_callback = KatibMetricLog()
-    training_history = model.fit(x_train, y_train, batch_size=64, epochs=10,
-                                 validation_data=(x_val, y_val),
-                                 callbacks=[katib_metric_log_callback])
+    model.evaluate(x_test,  y_test, verbose=0)
 
-    print("\\ntraining_history:", training_history.history)
-
-    # Evaluate the model on the test data using `evaluate`
-    print('\\n# Evaluate on test data')
-    results = model.evaluate(x_test, y_test, batch_size=128)
-    print('test loss, test acc:', results)
-
-
-class KatibMetricLog(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        # RFC 3339
-        local_time = datetime.now(timezone.utc).astimezone().isoformat()
-        print("\\nEpoch {}".format(epoch+1))
-        print("{} accuracy={:.4f}".format(local_time, logs['acc']))
-        print("{} loss={:.4f}".format(local_time, logs['loss']))
-        print("{} Validation-accuracy={:.4f}".format(local_time, logs['val_acc']))
-        print("{} Validation-loss={:.4f}".format(local_time, logs['val_loss']))
-
+class KatibMetricLog(Callback):
+    def on_batch_end(self, batch, logs={}):
+        print("batch=" + str(batch),
+              "accuracy=" + str(logs.get('acc')),
+              "loss=" + str(logs.get('loss')))
+    def on_epoch_begin(self, epoch, logs={}):
+        print("epoch " + str(epoch) + ":")
+    
+    def on_epoch_end(self, epoch, logs={}):
+        print("Validation-accuracy=" + str(logs.get('val_acc')),
+              "Validation-loss=" + str(logs.get('val_loss')))
+        return
 
 if __name__ == '__main__':
-    train()
+    if os.getenv('FAIRING_RUNTIME', None) is None:
+        from kubeflow import fairing
+        from kubeflow.fairing.kubernetes import utils as k8s_utils
+
+        DOCKER_REGISTRY = 'kubeflow-registry.default.svc.cluster.local:30000'
+        fairing.config.set_builder(
+            'append',
+            image_name='fairing-job',
+            base_image='brightfly/kubeflow-jupyter-lab:tf2.0-cpu',
+            registry=DOCKER_REGISTRY, 
+            push=True)
+        # cpu 2, memory 5GiB
+        fairing.config.set_deployer('job',
+                                    namespace='dudaji',
+                                    pod_spec_mutators=[
+                                        k8s_utils.get_resource_mutator(cpu=1,
+                                                                       memory=2)]
+         
+                                   )
+        fairing.config.run()
+    else:
+        remote_train = MyFashionMnist()
+        remote_train.train()
