@@ -17,15 +17,20 @@ spec:
     algorithmName: random
   parameters:
     - name: --learning_rate
-      parameterType: double
+      parameterType: float
       feasibleSpace:
-        min: "0.01"
-        max: "0.2"
-    - name: --dropout
-      parameterType: double
+        min: "0.001"
+        max: "0.1"
+    - name: --epochs
+      parameterType: int
       feasibleSpace:
-        min: "0.1"
-        max: "0.5"
+        min: "5"
+        max: "15"
+    - name: --batch_size
+      parameterType: int
+      feasibleSpace:
+        min: "32"
+        max: "256"
   trialTemplate:
     goTemplate:
         rawTemplate: |-
