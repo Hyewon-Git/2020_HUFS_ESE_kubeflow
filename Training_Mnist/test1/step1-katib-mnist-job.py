@@ -28,7 +28,7 @@ class MyMnist(object):
     test_images = test_images / 255.0
     
     # Reserve 10,000 samples for validation
-    x_val = train_images-10000:]
+    x_val = train_images[-10000:]
     y_val =train_labels[-10000:]
     train_images = train_images[:-10000]
     train_labels = train_labels[:-10000]
