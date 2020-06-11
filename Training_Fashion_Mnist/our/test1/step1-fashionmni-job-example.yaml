@@ -17,7 +17,7 @@ spec:
     algorithmName: random
   parameters:
     - name: --learning_rate
-      parameterType: float
+      parameterType: double
       feasibleSpace:
         min: "0.001"
         max: "0.1"
