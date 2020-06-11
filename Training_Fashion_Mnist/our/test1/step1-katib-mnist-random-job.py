@@ -15,7 +15,8 @@ class MyFashionMnist(object):
         #하이퍼파라미터를 입력받기위한 argparse 라이브러리
         parser = argparse.ArgumentParser()
         parser.add_argument('--learning_rate', default=0.01, type=float)
-        parser.add_argument('--dropout', default=0.2, type=float)
+        parser.add_argument('--epochs', default=10, type=int)
+        parser.add_argument('--batch_size', default=64, type=int)
         args = parser.parse_args()
         
         # fashion_mnist DATASET 불러오기
@@ -23,11 +24,6 @@ class MyFashionMnist(object):
 
         (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
         
-        # Reserve 10,000 samples for validation
-        x_val = train_images[-10000:]
-        y_val = train_labels[-10000:]
-        x_train = train_images[:-10000]
-        y_train = train_labels[:-10000]
            
         #모델구조설정
         model = keras.Sequential([
@@ -37,15 +33,15 @@ class MyFashionMnist(object):
         ])
         model.summary()
 
-        model.compile(optimizer='adam',
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate),
                       loss='sparse_categorical_crossentropy',
                       metrics=['accuracy'])
         
         print("Training...")
         # model.fit(train_images, train_labels, epochs=5)        
         katib_metric_log_callback = KatibMetricLog()
-        training_history = model.fit(x_train, y_train, batch_size=64, epochs=10,
-                                     validation_data=(x_val, y_val),
+        training_history = model.fit(train_images,train_labels, batch_size=args.batch_size,epochs=args.epochs,
+                                     validation_split=0.1,
                                      callbacks=[katib_metric_log_callback])
         
         print("\ntraining_history:", training_history.history)
@@ -53,7 +49,7 @@ class MyFashionMnist(object):
         # Evaluate the model on the test data using `evaluate`
         print('\n# Evaluate on test data')
         
-        results = model.evaluate(test_images, test_labels, batch_size=128)
+        results = model.evaluate(test_images, test_labels,verbose=2)
         print('test loss, test acc:', results)
         
         
