@@ -63,22 +63,18 @@ class KatibMetricLog(Callback):
 if __name__ == '__main__':
     if os.getenv('FAIRING_RUNTIME', None) is None:
         from kubeflow import fairing
-        from kubeflow.fairing.kubernetes import utils as k8s_utils
 
         DOCKER_REGISTRY = 'khw2126'
         fairing.config.set_builder('append',
-        
-            image_name='fairing-job',
-            base_image='brightfly/kubeflow-jupyter-lab:tf2.0-cpu',
-            registry=DOCKER_REGISTRY, 
-            push=True)
-        # cpu 2, memory 5GiB
+                                   image_name='fairing-job',
+                                   base_image='brightfly/kubeflow-jupyter-lab:tf2.0-gpu',
+                                   registry=DOCKER_REGISTRY, 
+                                   push=True)
+        # 
         fairing.config.set_deployer('job',
-                                    namespace='dudaji',
-                                    pod_spec_mutators=[
-                                        k8s_utils.get_resource_mutator(cpu=1,
-                                                                       memory=2)]
-         
+                                    namespace='admin',
+                                    cleanup=False,
+                                    stream_log=True         
                                    )
         fairing.config.run()
     else:
