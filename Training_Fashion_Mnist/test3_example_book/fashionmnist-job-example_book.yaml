@@ -1,8 +1,8 @@
 apiVersion: "kubeflow.org/v1alpha3"
 kind: Experiment
 metadata:
-  namespace: admin # 사용하는 namespace 명으로 바꾸어야합니다.
-  name: fashionmnist-job-example_book
+  namespace: admin
+  name: fashionmnist-job-examplebook
 spec:
   parallelTrialCount: 5 
   maxTrialCount: 50
