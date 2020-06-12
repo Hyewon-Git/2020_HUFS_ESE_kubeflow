@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-
+import os
+import json
 import tensorflow as tf
 import numpy as np
 import argparse
@@ -7,8 +8,26 @@ from datetime import datetime, timezone
 
 def train():
     print("TensorFlow version: ", tf.__version__)
+    
+    # tfjob으로 학습하기위해
+    tf_config = os.environ.get('TF_CONFIG', '{}')
+    print("TF_CONFIG %s", tf_config)
+    tf_config_json = json.loads(tf_config)
+    cluster = tf_config_json.get('cluster')
+    job_name = tf_config_json.get('task', {}).get('type')
+    task_index = tf_config_json.get('task', {}).get('index')
+    print("cluster={} job_name={} task_index={}}", cluster, job_name, task_index)
+    
+    #경로설정
+    tb_dir = '/app/data/logs'
+    model_dir = '/app/data/export'
+    version = 1
+    export_dir = os.path.join(model_dir, str(version))
+    
+    
 
     parser = argparse.ArgumentParser()
+    # katib 결과로 받은 parameter 넣기
     parser.add_argument('--learning_rate', default=0.01, type=float)
     parser.add_argument('--dropout', default=0.2, type=float)
     args = parser.parse_args()
@@ -37,12 +56,13 @@ def train():
 
     print("Training...")
 
-    katib_metric_log_callback = KatibMetricLog()
     training_history = model.fit(x_train, y_train, batch_size=64, epochs=10,
                                  validation_data=(x_val, y_val),
-                                 callbacks=[katib_metric_log_callback])
+                                 callbacks=[tf.keras.callbacks.TensorBoard(log_dir=tb_dir)])
 
     print("\\ntraining_history:", training_history.history)
+    
+    model.save(export_dir)
 
     # Evaluate the model on the test data using `evaluate`
     print('\\n# Evaluate on test data')
@@ -50,15 +70,15 @@ def train():
     print('test loss, test acc:', results)
 
 
-class KatibMetricLog(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        # RFC 3339
-        local_time = datetime.now(timezone.utc).astimezone().isoformat()
-        print("\\nEpoch {}".format(epoch+1))
-        print("{} accuracy={:.4f}".format(local_time, logs['acc']))
-        print("{} loss={:.4f}".format(local_time, logs['loss']))
-        print("{} Validation-accuracy={:.4f}".format(local_time, logs['val_acc']))
-        print("{} Validation-loss={:.4f}".format(local_time, logs['val_loss']))
+# class KatibMetricLog(tf.keras.callbacks.Callback):
+#     def on_epoch_end(self, epoch, logs=None):
+#         # RFC 3339
+#         local_time = datetime.now(timezone.utc).astimezone().isoformat()
+#         print("\\nEpoch {}".format(epoch+1))
+#         print("{} accuracy={:.4f}".format(local_time, logs['acc']))
+#         print("{} loss={:.4f}".format(local_time, logs['loss']))
+#         print("{} Validation-accuracy={:.4f}".format(local_time, logs['val_acc']))
+#         print("{} Validation-loss={:.4f}".format(local_time, logs['val_loss']))
 
 
 if __name__ == '__main__':
